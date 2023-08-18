@@ -94,6 +94,29 @@ class SendOccurrencesByEmailUseCaseTest {
     }
 
     @Test
+    fun `it should not send mail for already acknowledge occurrences`() {
+        val reminderOne = MotherObject.reminders().new()
+        val occurrenceOne = MotherObject.occurrences().newFrom(reminderOne)
+        val reminderTwo = MotherObject.reminders().new(text = "Remind me of creating tests")
+        val occurrenceTwo = MotherObject.occurrences().newFrom(reminderTwo, isAcknowledged = true)
+        val occurrences = InMemoryOccurrencesRepository(
+                mutableListOf(reminderOne),
+                mutableListOf(occurrenceOne, occurrenceTwo),
+                MotherObject.clock
+        )
+        val mailer: MailerService = mock()
+        val subject = SendOccurrencesByEmailUseCase(
+                occurrences,
+                Clock.offset(MotherObject.clock, Duration.ofSeconds(1L)),
+                mailer
+        )
+
+        subject.sendReminders()
+
+        verify(mailer, times(1)).send(any())
+    }
+
+    @Test
     fun `it should mark occurrence as already notified`() {
         val reminderOne = MotherObject.reminders().new()
         val occurrenceOne = MotherObject.occurrences().newFrom(reminderOne)

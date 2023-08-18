@@ -74,8 +74,8 @@ class PostgresOccurrencesRepository(
                 REMINDERS.ID.eq(OCCURRENCES.REMINDER_ID)
             )
             .where(
-                OCCURRENCES.TIMESTAMP.lt(instant)
-            )
+                OCCURRENCES.TIMESTAMP.lt(instant))
+            .and(OCCURRENCES.IS_ACKNOWLEDGED.isFalse)
             .fetchGroups {
                 val reminder = it.into(REMINDERS).toReminder()
                 it.into(OCCURRENCES).toReminderOccurrence(reminder)
