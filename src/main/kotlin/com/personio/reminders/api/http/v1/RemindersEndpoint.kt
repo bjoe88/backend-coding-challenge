@@ -3,18 +3,13 @@ package com.personio.reminders.api.http.v1
 import com.personio.reminders.api.http.v1.mappers.RemindersResponseMapper
 import com.personio.reminders.api.http.v1.requests.CreateReminderRequest
 import com.personio.reminders.api.http.v1.responses.shared.Response
+import com.personio.reminders.exceptions.AuthorizationException
 import com.personio.reminders.usecases.reminders.create.CreateReminderCommand
 import com.personio.reminders.usecases.reminders.create.CreateReminderUseCase
 import com.personio.reminders.usecases.reminders.find.FindRemindersUseCase
 import java.util.UUID
 import org.springframework.http.HttpStatus
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.ResponseStatus
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 /**
  * This is a controller (interface adapter) used by the web interface.
@@ -52,8 +47,12 @@ class RemindersEndpoint(
      * This endpoint returns a `200 OK` status code to the client along with a JSON containing all the employee's reminders.
      */
     @GetMapping
-    fun findAll(@RequestParam(required = true) employeeId: UUID) = Response(
-        findUseCase.findAll(employeeId)
-            .map(RemindersResponseMapper::toResponse)
+    fun findAll(@RequestHeader("authorization") authorization: String, @RequestParam(required = true) employeeId: UUID) = Response(
+        if (authorization != employeeId.toString()) {
+            throw AuthorizationException("Unauthorized request")
+        } else {
+            findUseCase.findAll(employeeId)
+                    .map(RemindersResponseMapper::toResponse)
+        }
     )
 }
