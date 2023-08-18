@@ -4,6 +4,7 @@ import com.personio.reminders.api.http.v1.responses.shared.ApiError
 import com.personio.reminders.api.http.v1.responses.shared.ApiErrors
 import com.personio.reminders.domain.occurrences.exceptions.OccurrenceNotFoundException
 import com.personio.reminders.domain.reminders.exceptions.ReminderNotFoundException
+import com.personio.reminders.exceptions.AuthorizationException
 import java.util.Locale
 import java.util.UUID
 import org.slf4j.LoggerFactory
@@ -50,6 +51,10 @@ class ExceptionsHandler(@Autowired private val messageSource: MessageSource) {
     @ExceptionHandler(value = [ReminderNotFoundException::class, OccurrenceNotFoundException::class])
     fun handleNotFoundException(ex: Exception, request: WebRequest, locale: Locale) =
         responseWithApiError(HttpStatus.NOT_FOUND, ex, locale)
+
+    @ExceptionHandler(value = [AuthorizationException::class])
+    fun handleAuthorizationException(ex: Exception, request: WebRequest, locale: Locale) =
+            responseWithApiError(HttpStatus.UNAUTHORIZED, ex, locale)
 
     fun mapError(uuid: String, ex: Exception, req: WebRequest) =
         ApiError(uuid, "500 INTERNAL_SERVER_ERROR", "Something went wrong", null)

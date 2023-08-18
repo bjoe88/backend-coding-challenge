@@ -1,6 +1,5 @@
 package com.personio.reminders.api.http.v1
 
-import com.personio.reminders.domain.reminders.exceptions.ReminderNotFoundException
 import com.personio.reminders.helpers.MotherObject
 import com.personio.reminders.infra.configuration.DefaultTestConfiguration
 import com.personio.reminders.usecases.reminders.create.CreateReminderUseCase
@@ -10,7 +9,6 @@ import java.util.UUID
 import org.hamcrest.Matchers
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
-import org.mockito.kotlin.doNothing
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.client.AutoConfigureWebClient
@@ -100,6 +98,7 @@ class RemindersEndpointTest {
         val id1 = UUID.fromString("4e8549a3-6d92-4f89-8ccd-6a21ca63cb39")
         val id2 = UUID.fromString("a11fc72b-baee-4980-8c64-d1da015db59d")
         val employeeId = UUID.fromString("8989c9c5-fb2e-45ef-b92a-c279ddf20f25")
+        val token = "8989c9c5-fb2e-45ef-b92a-c279ddf20f25"
         whenever(findUseCase.findAll(employeeId))
             .thenReturn(
                 listOf(
@@ -115,6 +114,7 @@ class RemindersEndpointTest {
             .perform(
                 MockMvcRequestBuilders.get("/reminders?employeeId=8989c9c5-fb2e-45ef-b92a-c279ddf20f25")
                     .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", token)
                     .characterEncoding("utf-8")
             )
             .andExpect(MockMvcResultMatchers.status().`is`(HttpStatus.OK.value()))
@@ -148,5 +148,19 @@ class RemindersEndpointTest {
                         Matchers.containsString("Invalid input provided")
                     )
             )
+    }
+
+    @Test
+    fun `findAll should return 401 if auth not valid`() {
+        val employeeId = UUID.fromString("8989c9c5-fb2e-45ef-b92a-c279ddf20f25")
+        val token = "8989c9c5-fb2e-45ef-b92a-c279ddf20f24"
+        mockMvc
+                .perform(
+                        MockMvcRequestBuilders.get("/reminders?employeeId=$employeeId")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("Authorization", token)
+                                .characterEncoding("utf-8")
+                )
+                .andExpect(MockMvcResultMatchers.status().`is`(HttpStatus.UNAUTHORIZED.value()))
     }
 }
